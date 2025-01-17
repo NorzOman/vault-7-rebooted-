@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vault - 7 [2.0]</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        .card-body {
+            min-height: 100px;
+            height: 100%;
+        }
+        .row {
+            display: flex;
+        }
+        .col-md-6 {
+            display: flex;
+            flex-direction: column;
+        }
+        .card {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .response-safe {
+            background-color: #d4edda !important;
+        }
+        .response-danger {
+            background-color: #f8d7da !important;
+        }
+        footer {
+            margin-top: 2rem;
+            padding: 1rem 0;
+            background-color: #f8f9fa;
+            text-align: center;
+            border-top: 1px solid #dee2e6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Back Button -->
+        <div class="row mt-3">
+            <div class="col-12">
+                <a href="/test" class="btn btn-secondary">&larr; Back</a>
+            </div>
+        </div>
+
+        <!-- Warning Banner -->
+        <div class="alert alert-warning text-center mt-3" role="alert">
+            <strong>Notice:</strong> This is not the actual frontend. This is just a testing interface for backend functionality. The actual frontend will be developed by Arshad & Neal.
+        </div>
+
+        <!-- Main Title -->
+        <div class="row mt-4">
+            <div class="col-12 text-center">
+                <h1>Vault - 7 [2.0]</h1>
+                <h4 class="text-muted">File Scan Testing Interface</h4>
+            </div>
+        </div>
+
+        <!-- Get Token Row -->
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header bg-dark text-white">
+                        <h5 class="mb-0">Token Response</h5>
+                    </div>
+                    <div class="card-body">
+                        <button class="btn btn-primary mb-3" id="get-token-btn">Get Token</button>
+                        <pre id="token-response" class="bg-light p-3 mb-0" style="white-space: pre-wrap;"></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Token Input -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Authentication</h5>
+                    </div>
+                    <div class="card-body py-3">
+                        <div class="form-group mb-0">
+                            <label for="token" class="mb-1">Authentication Token:</label>
+                            <input type="text" class="form-control" id="token" placeholder="Enter your token">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- File Scan Section -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">File Scan</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info mb-3">
+                            <small>Example malicious hash: cd099f25b0a110b2e16c4f5015d4c507</small>
+                        </div>
+                        <div id="file-inputs">
+                            <div class="input-group mb-3">
+                                <input type="text" class="form-control filename" placeholder="File name">
+                                <input type="text" class="form-control filehash" placeholder="MD5 hash (without md5: prefix)">
+                                <button class="btn btn-danger remove-row">×</button>
+                            </div>
+                        </div>
+                        <button class="btn btn-success" id="add-file-row">
+                            <i class="bi bi-plus"></i> Add Another File
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Request and Response Section -->
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-dark text-white">
+                        <h5 class="mb-0">Request Preview</h5>
+                    </div>
+                    <div class="card-body">
+                        <pre id="json-display" class="bg-light p-3 mb-0" style="white-space: pre-wrap;"></pre>
+                        <button class="btn btn-primary mt-3" id="send-request">Send Request</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-dark text-white">
+                        <h5 class="mb-0">Response</h5>
+                    </div>
+                    <div class="card-body">
+                        <pre id="response-display" class="bg-light p-3 mb-0" style="white-space: pre-wrap;"></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p class="mb-0">&copy; 2025 Vault - 7 [2.0]. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        function updateJSON() {
+            let jsonObj = {
+                token: $('#token').val() || ""
+            };
+            
+            // Only add hashes array if there are files
+            let hashes = [];
+            $('#file-inputs .input-group').each(function() {
+                let filename = $(this).find('.filename').val();
+                let hash = $(this).find('.filehash').val();
+                if (filename || hash) {
+                    hashes.push([filename || "", "md5:" + (hash || "")]);
+                }
+            });
+            
+            if (hashes.length > 0) {
+                jsonObj.hashes = hashes;
+            }
+            
+            let jsonString = JSON.stringify(jsonObj, null, 4);
+            $('#json-display').text(jsonString === '{}' ? '' : jsonString);
+        }
+
+        $(document).ready(function() {
+            // Initialize empty JSON display
+            updateJSON();
+
+            // Get Token Button Handler
+            $('#get-token-btn').click(function() {
+                let baseUrl = window.location.origin;
+                $.get(baseUrl + '/get_token', function(data) {
+                    $('#token-response').text(JSON.stringify(data, null, 4));
+                }).fail(function(xhr, status, error) {
+                    $('#token-response').text('Error: ' + error);
+                });
+            });
+
+            // Send Request Button Handler
+            $('#send-request').click(function() {
+                try {
+                    let jsonText = $('#json-display').text();
+                    if (!jsonText) {
+                        $('#response-display').text('Error: No request data available');
+                        return;
+                    }
+
+                    let requestData = JSON.parse(jsonText);
+                    
+                    if (!requestData.token) {
+                        $('#response-display').text('Error: Token is required');
+                        return;
+                    }
+
+                    if (!requestData.hashes || !requestData.hashes.length) {
+                        $('#response-display').text('Error: At least one file hash is required');
+                        return;
+                    }
+
+                    $.ajax({
+                        url: '/file_scan',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify(requestData),
+                        success: function(response) {
+                            $('#response-display').text(JSON.stringify(response, null, 4));
+                            
+                            // Remove any existing response classes
+                            $('#response-display').removeClass('response-safe response-danger');
+                            
+                            // Add appropriate class based on response
+                            if (response.result && response.result.length === 0) {
+                                $('#response-display').addClass('response-safe');
+                            } else if (response.result && response.result.length > 0) {
+                                $('#response-display').addClass('response-danger');
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            $('#response-display').removeClass('response-safe response-danger');
+                            $('#response-display').text('Something failed internally');
+                        }
+                    });
+                } catch (e) {
+                    $('#response-display').removeClass('response-safe response-danger');
+                    $('#response-display').text('Something failed internally');
+                }
+            });
+
+            $('#add-file-row').click(function() {
+                let newRow = `
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control filename" placeholder="File name">
+                        <input type="text" class="form-control filehash" placeholder="MD5 hash (without md5: prefix)">
+                        <button class="btn btn-danger remove-row">×</button>
+                    </div>
+                `;
+                $('#file-inputs').append(newRow);
+                updateJSON();
+            });
+
+            $(document).on('click', '.remove-row', function() {
+                $(this).closest('.input-group').remove();
+                updateJSON();
+            });
+
+            $(document).on('input', 'input', function() {
+                updateJSON();
+            });
+        });
+    </script>
+</body>
+</html>
