@@ -42,7 +42,7 @@ message_scan_blueprint = Blueprint('message_scan', __name__)
 
 def scan_message(message):
     print(f"[ LOG (message_scan) ]: Scanning message: {message}")
-    if "malicious" in message.lower():
+    if "free" in message.lower():
         return "malicious"
     return "safe"
 
