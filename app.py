@@ -1,6 +1,7 @@
 ## Vault - 7 2.0 [Backend]
 
 from flask import Flask, render_template, request, jsonify
+from flask_cors import CORS
 from routes.check_health import check_health_blueprint
 from routes.get_token import get_token_blueprint
 from routes.file_scan import file_scan_blueprint
@@ -9,6 +10,7 @@ from routes.ip_scan import ip_scan_blueprint
 from routes.url_scan import url_scan_blueprint
 
 app = Flask(__name__)
+CORS(app)
 app.config['SECRET_KEY'] = 'your_secret_key'
 
 # Register the health check blueprint
