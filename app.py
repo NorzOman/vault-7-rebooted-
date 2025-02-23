@@ -6,7 +6,6 @@ from routes.check_health import check_health_blueprint
 from routes.get_token import get_token_blueprint
 from routes.file_scan import file_scan_blueprint
 from routes.message_scan import message_scan_blueprint
-from routes.ip_scan import ip_scan_blueprint
 from routes.url_scan import url_scan_blueprint
 
 app = Flask(__name__)
@@ -25,9 +24,6 @@ app.register_blueprint(file_scan_blueprint)
 # Registered the message scan blueprint
 app.register_blueprint(message_scan_blueprint)
 
-# Registered the IP scan blueprint
-app.register_blueprint(ip_scan_blueprint)
-
 # Registered the url scan blueprint
 app.register_blueprint(url_scan_blueprint)
 
@@ -39,7 +35,9 @@ def index():
 @app.route('/docs')
 def docs():
     return render_template('docs.html')
-
+@app.route('/test/ip_scan')
+def test_ip_scan():
+    return render_template('test_ip_scan.html')
 @app.route('/test')
 def test():
     return render_template('test.html')
@@ -51,10 +49,6 @@ def test_file_scan():
 @app.route('/test/message_scan')
 def test_message_scan():
     return render_template('test_message_scan.html')
-
-@app.route('/test/ip_scan')
-def test_ip_scan():
-    return render_template('test_ip_scan.html')
 
 @app.route('/test/url_scan')
 def test_url_scan():
