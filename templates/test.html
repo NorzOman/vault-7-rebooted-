@@ -18,32 +18,34 @@
 
         .navbar {
             background-color: #1c1c1e;
-            padding: 1rem 2rem;
+            padding: 1rem;
             border-bottom: 1px solid #333;
+            width: 100%;
         }
 
         .navbar-brand {
             color: #ffffff;
-            font-size: 1.2rem;
+            font-size: clamp(1rem, 2.5vw, 1.2rem);
             display: flex;
             align-items: center;
             gap: 10px;
         }
 
         .navbar-brand img {
-            width: 50px;
-            height: 40px;
+            width: clamp(30px, 8vw, 50px);
+            height: auto;
+            max-height: 40px;
         }
 
         .main-content {
             flex: 1;
             display: flex;
             flex-direction: column;
-            padding: 2rem 0;
+            padding: 1rem 0;
         }
 
         .main-title {
-            font-size: 2.5rem;
+            font-size: clamp(1.8rem, 5vw, 2.5rem);
             font-weight: 500;
             text-align: center;
             margin-bottom: 2rem;
@@ -54,16 +56,21 @@
             align-items: center;
             justify-content: center;
             gap: 20px;
-            margin-bottom: 3rem;
+            margin-bottom: 2rem;
+            padding: 0 1rem;
         }
 
         .info-box {
             background-color: #252529;
             border-radius: 8px;
-            padding: 1.5rem;
-            margin: 1rem 0;
+            padding: 1.2rem;
+            margin: 0.8rem;
             cursor: pointer;
             transition: all 0.3s ease;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         .info-box:hover {
@@ -77,12 +84,13 @@
             justify-content: space-between;
             align-items: center;
             color: #ffffff;
+            font-size: clamp(0.9rem, 2.5vw, 1rem);
         }
 
         .info-box-description {
             color: #8e8e93;
             margin-top: 0.5rem;
-            font-size: 0.9rem;
+            font-size: clamp(0.8rem, 2vw, 0.9rem);
         }
 
         .back-button {
@@ -92,11 +100,62 @@
             border: 1px solid #ffffff;
             border-radius: 4px;
             transition: all 0.3s ease;
+            font-size: clamp(0.8rem, 2vw, 1rem);
         }
 
         .back-button:hover {
             background-color: #ffffff;
             color: #1c1c1e;
+        }
+
+        .new-feature {
+            position: relative;
+            outline: 2px solid #8a2be2;
+            animation: pulse 2s infinite;
+        }
+
+        .new-feature::after {
+            content: 'UPDATED';
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: #8a2be2;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+
+        @keyframes pulse {
+            0% { outline-color: #8a2be2; }
+            50% { outline-color: #b366ff; }
+            100% { outline-color: #8a2be2; }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+            
+            .navbar {
+                padding: 0.8rem;
+            }
+
+            .info-box {
+                margin: 0.8rem 0;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .navbar-brand {
+                font-size: 1rem;
+            }
+
+            .back-button {
+                padding: 0.4rem 0.8rem;
+            }
         }
     </style>
 </head>
@@ -125,17 +184,17 @@
                     <span>+</span>
                 </div>
                 <div class="info-box-description">
-                    Test file scanning for malicious content
+                    File scanning for malicious content
                 </div>
             </div>
 
-            <div class="info-box" onclick="window.location.href='/test/message_scan'">
+            <div class="info-box new-feature" onclick="window.location.href='/test/message_scan'">
                 <div class="info-box-title">
                     <span>Message Scan</span>
                     <span>+</span>
                 </div>
                 <div class="info-box-description">
-                    Test message content analysis
+                    Message content analysis
                 </div>
             </div>
 
@@ -145,7 +204,7 @@
                     <span>+</span>
                 </div>
                 <div class="info-box-description">
-                    Test URL safety and domain analysis
+                    URL safety and domain analysis
                 </div>
             </div>
         </div>

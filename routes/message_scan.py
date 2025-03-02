@@ -1,4 +1,4 @@
-#routes/message_scan.py
+    #routes/message_scan.py
 """
 Documentation:
 
@@ -20,14 +20,18 @@ Response:
     Format: JSON
     Example response:
     {
-        "result": "safe"
+        "status": "success",
+        "data": {
+            "result": "safe",
+            "reason": "Message appears legitimate with no suspicious elements"
+        }
     }
     Note: Result will be either "safe" or "malicious"
 
 Example curl command:
     curl -X POST http://localhost:5000/message_scan \
          -H "Content-Type: application/json" \
-         -d '{"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MzcxMTg1NzV9.5rGCXz9mcX-kCxG-5Z4tUNQaGmZrsIcqkJF64EUwE54", "message": "Hello, please check this message for safety"}'
+         -d '{"token": "eyJhbGciOiJIUzI1NiIsIn....", "message": "Hello, please check this message for safety"}'.
 
 Notes:
 - The token must be valid (obtained from /get_token endpoint)
@@ -37,14 +41,64 @@ Notes:
 """
 from flask import Blueprint, request, jsonify
 from utils.token_validator import validate_token
+import os
+import requests
 
 message_scan_blueprint = Blueprint('message_scan', __name__)
 
 def scan_message(message):
+    """
+    Uses Mistral 7B via OpenRouter to classify an email as 'Phishing' or 'Safe' 
+    and provide a logical explanation (50 words).
+    
+    Args:
+        message (str): The email/message content to analyze.
+    
+    Returns:
+        dict: Contains classification ('Phishing' or 'Safe') and explanation.
+    """
     print(f"[ LOG (message_scan) ]: Scanning message: {message}")
-    if "free" in message.lower():
-        return "malicious"
-    return "safe"
+    
+    API_KEY = os.getenv("OPENROUTER_API_KEY")
+    if not API_KEY:
+        print(f"[ LOG (message_scan) ]: No API key found")
+        return {"result": "error", "reason": "No API key found"}
+
+    url = "https://openrouter.ai/api/v1/chat/completions"
+    headers = {"Authorization": f"Bearer {API_KEY}"}
+    data = {
+        "model": "mistralai/mistral-7b-instruct",
+        "messages": [
+            {"role": "system", "content": (
+                "You are a balanced cybersecurity AI specialized in detecting phishing emails. "
+                "Analyze messages carefully and avoid being overly suspicious. Only flag messages "
+                "as phishing if there are clear red flags like: urgent action required, suspicious links, "
+                "requests for sensitive information, or poor grammar/spelling typical of scams. "
+                "If a message appears normal and legitimate, classify it as 'Safe'. "
+                "Provide a clear, objective explanation (50 words) for your classification."
+            )},
+            {"role": "user", "content": f"Analyze this message and classify it:\n\n{message}"}
+        ],
+        "temperature": 0.1
+    }
+
+    try:
+        response = requests.post(url, headers=headers, json=data)
+        
+        if response.status_code == 200:
+            ai_response = response.json()["choices"][0]["message"]["content"].strip()
+            # Parse AI response to extract result and reason
+            if "Phishing" in ai_response:
+                result = "malicious"
+            else:
+                result = "safe"
+            return {"result": result, "reason": ai_response}
+        else:
+            print(f"[ LOG (message_scan) ]: API Error: {response.status_code} - {response.text}")
+            return {"result": "error", "reason": f"API error: {response.status_code}"}
+    except Exception as e:
+        print(f"[ LOG (message_scan) ]: Request Error: {str(e)}")
+        return {"result": "error", "reason": "Request failed"}
 
 @message_scan_blueprint.route('/message_scan', methods=['POST'])
 def message_scan():
@@ -56,7 +110,10 @@ def message_scan():
             print(f"[ LOG (message_scan) ]: No JSON data provided")
             response = {
                 'status': 'error',
-                'message': 'No JSON data provided'
+                'data': {
+                    'result': 'error',
+                    'reason': 'No JSON data provided'
+                }
             }
             return jsonify(response), 400
 
@@ -64,7 +121,10 @@ def message_scan():
             print(f"[ LOG (message_scan) ]: Token or message were not found in data")
             response = {
                 'status': 'error',
-                'message': 'Token and message are required'
+                'data': {
+                    'result': 'error',
+                    'reason': 'Token and message are required'
+                }
             }
             return jsonify(response), 400
         
@@ -72,7 +132,10 @@ def message_scan():
             print(f"[ LOG (message_scan) ]: Token is invalid")
             response = {
                 'status': 'error',
-                'message': 'Invalid token'
+                'data': {
+                    'result': 'error',
+                    'reason': 'Invalid token'
+                }
             }
             return jsonify(response), 401
         
@@ -82,19 +145,40 @@ def message_scan():
             print(f"[ LOG (message_scan) ]: Message is empty")
             response = {
                 'status': 'error',
-                'message': 'Message is required'
+                'data': {
+                    'result': 'error',
+                    'reason': 'Message is required'
+                }
+            }
+            return jsonify(response), 400
+
+        if len(message) > 100:
+            print(f"[ LOG (message_scan) ]: Message exceeds 50 characters")
+            response = {
+                'status': 'error',
+                'data': {
+                    'result': 'error',
+                    'reason': 'Message must not exceed 100 characters'
+                }
             }
             return jsonify(response), 400
         
-        result = scan_message(message)
+        scan_result = scan_message(message)
         
-        print(f"[ LOG (message_scan) ]: Scan result: {result}")
-        return jsonify({'result': result})
+        print(f"[ LOG (message_scan) ]: Scan result: {scan_result}")
+        response = {
+            'status': 'success',
+            'data': scan_result
+        }
+        return jsonify(response)
     
     except Exception as e:
         print(f"[ LOG (message_scan) ]: Error: {e}")
         response = {
             'status': 'error',
-            'message': 'Internal server error'
+            'data': {
+                'result': 'error',
+                'reason': 'Internal server error'
+            }
         }
         return jsonify(response), 500

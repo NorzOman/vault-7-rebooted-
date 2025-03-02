@@ -19,37 +19,40 @@
 
         .navbar {
             background-color: #1c1c1e;
-            padding: 1rem 2rem;
+            padding: clamp(0.8rem, 2vw, 2rem);
             border-bottom: 1px solid #333;
         }
 
         .navbar-brand {
             color: #ffffff;
-            font-size: 1.2rem;
+            font-size: clamp(1rem, 2.5vw, 1.2rem);
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: clamp(5px, 2vw, 10px);
         }
 
         .navbar-brand img {
-            width: 50px;
-            height: 40px;
+            width: clamp(30px, 8vw, 50px);
+            height: auto;
+            aspect-ratio: 5/4;
         }
 
         .main-content {
             flex: 1;
             display: flex;
             flex-direction: column;
-            padding: 2rem 0;
+            padding: clamp(1rem, 4vw, 2rem) 0;
         }
 
         .info-box {
             background-color: #252529;
             border-radius: 8px;
-            padding: 1.5rem;
-            margin: 1rem 0;
+            padding: clamp(1rem, 3vw, 1.5rem);
+            margin: clamp(0.5rem, 2vw, 1rem) 0;
             cursor: pointer;
             transition: all 0.3s ease;
+            width: 100%;
+            max-width: 100%;
         }
 
         .info-box:hover {
@@ -63,6 +66,8 @@
             border: none;
             color: white;
             transition: all 0.3s ease;
+            padding: clamp(0.3rem, 1.5vw, 0.75rem) clamp(0.6rem, 2vw, 1rem);
+            font-size: clamp(0.875rem, 2vw, 1rem);
         }
 
         .btn:hover {
@@ -81,6 +86,8 @@
             background-color: #3a3a3c;
             border: 1px solid #48484a;
             color: #ffffff;
+            font-size: clamp(0.875rem, 2vw, 1rem);
+            padding: clamp(0.5rem, 1.5vw, 0.75rem);
         }
 
         .form-control::placeholder {
@@ -97,21 +104,61 @@
         pre {
             background-color: #1e1e1e;
             color: #00ff00;
-            padding: 1.25rem;
+            padding: clamp(1rem, 2.5vw, 1.25rem);
             border-radius: 5px;
             font-family: 'Roboto Mono', monospace;
+            font-size: clamp(0.75rem, 1.8vw, 0.875rem);
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
         }
 
         .alert {
             background-color: #3a3a3c;
             border: 1px solid #48484a;
             color: #ffffff;
+            font-size: clamp(0.875rem, 2vw, 1rem);
+            padding: clamp(0.75rem, 2vw, 1rem);
         }
 
         .alert-info {
             background-color: #8a2be2;
             border-color: #7a1dd1;
             color: #ffffff;
+        }
+
+        h1 {
+            font-size: clamp(1.5rem, 4vw, 2rem);
+        }
+
+        h5 {
+            font-size: clamp(1rem, 2.5vw, 1.25rem);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+
+            .info-box {
+                margin: 0.8rem 0;
+            }
+
+            pre {
+                padding: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .navbar-brand {
+                font-size: 1rem;
+            }
+
+            .btn {
+                width: 100%;
+                margin-bottom: 0.5rem;
+            }
         }
     </style>
 </head>
@@ -171,11 +218,13 @@
                     <div class="col-12">
                         <h5 class="mb-3">Message Scan</h5>
                         <div class="alert alert-info mb-3">
-                            <small>Example malicious message: Get 100$ for free</small>
+                            <small>Example malicious message: Get 100$ for free</small><br>
+                            <small>Maximum message length: 100 words</small>
                         </div>
                         <div class="form-group">
                             <label for="message" class="mb-2">Message to Scan:</label>
-                            <textarea class="form-control" id="message" rows="4" placeholder="Enter message to scan"></textarea>
+                            <textarea class="form-control" id="message" rows="4" placeholder="Enter message to scan (max 100 words)" maxlength="500"></textarea>
+                            <small class="text-muted" id="word-count">0/100 words</small>
                         </div>
                     </div>
                 </div>
@@ -214,8 +263,22 @@
             $('#json-display').text(jsonString === '{}' ? '' : jsonString);
         }
 
+        function countWords(str) {
+            return str.trim().split(/\s+/).length;
+        }
+
         $(document).ready(function() {
             updateJSON();
+
+            $('#message').on('input', function() {
+                let words = countWords($(this).val());
+                $('#word-count').text(words + '/100 words');
+                
+                if (words > 100) {
+                    let words = $(this).val().trim().split(/\s+/).slice(0, 100).join(' ');
+                    $(this).val(words);
+                }
+            });
 
             $('#get-token-btn').click(function() {
                 let baseUrl = window.location.origin;
@@ -232,6 +295,9 @@
 
             $('#send-request').click(function() {
                 try {
+                    let $btn = $(this);
+                    let originalText = $btn.text();
+                    
                     let jsonText = $('#json-display').text();
                     if (!jsonText) {
                         $('#response-display').text('Error: No request data available');
@@ -250,6 +316,14 @@
                         return;
                     }
 
+                    if (countWords(requestData.message) > 100) {
+                        $('#response-display').text('Error: Message cannot exceed 100 words');
+                        return;
+                    }
+
+                    // Disable button and show loading state
+                    $btn.prop('disabled', true).text('Loading...');
+
                     $.ajax({
                         url: '/message_scan',
                         type: 'POST',
@@ -260,6 +334,10 @@
                         },
                         error: function(xhr, status, error) {
                             $('#response-display').text('Error: Something failed internally');
+                        },
+                        complete: function() {
+                            // Re-enable button and restore original text
+                            $btn.prop('disabled', false).text(originalText);
                         }
                     });
                 } catch (e) {
