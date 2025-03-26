@@ -70,17 +70,15 @@ def scan_message(message):
         "model": "mistralai/mistral-7b-instruct",
         "messages": [
             {"role": "system", "content": (
-                "You are a balanced cybersecurity AI specialized in detecting phishing emails. "
-                "Analyze messages carefully and avoid being overly suspicious. Only flag messages "
-                "as phishing if there are clear red flags like: urgent action required, suspicious links, "
-                "requests for sensitive information, or poor grammar/spelling typical of scams. "
-                "If a message appears normal and legitimate, classify it as 'Safe'. "
-                "Provide a clear, objective explanation (50 words) for your classification."
+                "You analyze emails for phishing. Flag only clear red flags: urgency, suspicious links, "
+                "requests for sensitive data, or poor grammar. Otherwise, classify as 'Safe'. "
+                "Give a 50-word objective explanation."
             )},
-            {"role": "user", "content": f"Analyze this message and classify it:\n\n{message}"}
+            {"role": "user", "content": f"Analyze this message:\n\n{message}"}
         ],
         "temperature": 0.1
     }
+
 
     try:
         response = requests.post(url, headers=headers, json=data)
@@ -152,8 +150,8 @@ def message_scan():
             }
             return jsonify(response), 400
 
-        if len(message) > 100:
-            print(f"[ LOG (message_scan) ]: Message exceeds 50 characters")
+        if len(message) > 500:
+            print(f"[ LOG (message_scan) ]: Message exceeds 500 characters")
             response = {
                 'status': 'error',
                 'data': {
