@@ -170,6 +170,7 @@ def message_scan():
             'status': 'success',
             'data': scan_result
         }
+        print(response)
         return jsonify(response)
     
     except Exception as e:
