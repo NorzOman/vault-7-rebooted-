@@ -63,6 +63,8 @@ def scan_hashes(hashes):
             row = cursor.fetchone()
             if row:
                 results.append((filename, hash_value, row[0]))
+            else:
+                results.append((filename, hash_value, "safe"))
 
         conn.close()
         print(f"[ LOG (file_scan) ]: Scanning hashes completed successfully")
