@@ -57,22 +57,14 @@ Notes:
 from flask import Blueprint, request, jsonify
 from utils.token_validator import validate_token
 from urllib.parse import urlparse
-import whois
 import re
-from datetime import datetime
-import math
-from collections import Counter
-
-url_scan_blueprint = Blueprint('url_scan', __name__)
-
 import requests
 import dns.resolver
-import re
 import hashlib
 import json
 import tldextract
-from urllib.parse import urlparse
 
+url_scan_blueprint = Blueprint('url_scan', __name__)
 
 def analyze_url(url):
     result = {}
