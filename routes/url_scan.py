@@ -66,7 +66,7 @@ import tldextract
 
 url_scan_blueprint = Blueprint('url_scan', __name__)
 
-def analyze_url(url):
+def scan_url(url):
     result = {}
     try:
         # Check URL status (following redirects for complete chain)
